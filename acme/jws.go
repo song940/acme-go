@@ -129,45 +129,8 @@ func (client *Client) buildSignedRequestData(url string, payload interface{}) (o
 	if err != nil {
 		return
 	}
-	return jwsEncodeJSON(payload, client.Account.PrivateKey, client.Account.URL, nonce, url)
+	return jwsEncodeJSON(payload, client.PrivateKey, client.AccountURL, nonce, url)
 }
-
-// jwsWithMAC creates and signs a JWS using the given key and the HS256
-// algorithm. kid and url are included in the protected header. rawPayload
-// should not be base64-URL-encoded.
-// func jwsWithMAC(key []byte, kid, url string, rawPayload []byte) (*jsonWebSignature, error) {
-// 	if len(key) == 0 {
-// 		return nil, errors.New("acme: cannot sign JWS with an empty MAC key")
-// 	}
-// 	header := struct {
-// 		Algorithm string `json:"alg"`
-// 		KID       string `json:"kid"`
-// 		URL       string `json:"url,omitempty"`
-// 	}{
-// 		// Only HMAC-SHA256 is supported.
-// 		Algorithm: "HS256",
-// 		KID:       kid,
-// 		URL:       url,
-// 	}
-// 	rawProtected, err := json.Marshal(header)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	protected := base64.RawURLEncoding.EncodeToString(rawProtected)
-// 	payload := base64.RawURLEncoding.EncodeToString(rawPayload)
-
-// 	h := hmac.New(sha256.New, key)
-// 	if _, err := h.Write([]byte(protected + "." + payload)); err != nil {
-// 		return nil, err
-// 	}
-// 	mac := h.Sum(nil)
-
-// 	return &jsonWebSignature{
-// 		Protected: protected,
-// 		Payload:   payload,
-// 		Sig:       base64.RawURLEncoding.EncodeToString(mac),
-// 	}, nil
-// }
 
 // jwkEncode encodes public part of an RSA or ECDSA key into a JWK.
 // The result is also suitable for creating a JWK thumbprint.
@@ -250,3 +213,40 @@ func JWKThumbprint(pub crypto.PublicKey) (string, error) {
 	b := sha256.Sum256([]byte(jwk))
 	return base64.RawURLEncoding.EncodeToString(b[:]), nil
 }
+
+// jwsWithMAC creates and signs a JWS using the given key and the HS256
+// algorithm. kid and url are included in the protected header. rawPayload
+// should not be base64-URL-encoded.
+// func jwsWithMAC(key []byte, kid, url string, rawPayload []byte) (*jsonWebSignature, error) {
+// 	if len(key) == 0 {
+// 		return nil, errors.New("acme: cannot sign JWS with an empty MAC key")
+// 	}
+// 	header := struct {
+// 		Algorithm string `json:"alg"`
+// 		KID       string `json:"kid"`
+// 		URL       string `json:"url,omitempty"`
+// 	}{
+// 		// Only HMAC-SHA256 is supported.
+// 		Algorithm: "HS256",
+// 		KID:       kid,
+// 		URL:       url,
+// 	}
+// 	rawProtected, err := json.Marshal(header)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	protected := base64.RawURLEncoding.EncodeToString(rawProtected)
+// 	payload := base64.RawURLEncoding.EncodeToString(rawPayload)
+
+// 	h := hmac.New(sha256.New, key)
+// 	if _, err := h.Write([]byte(protected + "." + payload)); err != nil {
+// 		return nil, err
+// 	}
+// 	mac := h.Sum(nil)
+
+// 	return &jsonWebSignature{
+// 		Protected: protected,
+// 		Payload:   payload,
+// 		Sig:       base64.RawURLEncoding.EncodeToString(mac),
+// 	}, nil
+// }

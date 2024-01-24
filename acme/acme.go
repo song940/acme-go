@@ -8,6 +8,8 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -33,42 +35,9 @@ type Directory struct {
 }
 
 type Response struct {
-	Status string `json:"status"`
+	Status int    `json:"status"`
 	Type   string `json:"type"`
 	Detail string `json:"detail"`
-}
-
-type RevokeCertRequest struct {
-	Certificate string `json:"certificate"`
-	Reason      int    `json:"reason"`
-}
-
-type Account struct {
-	PrivateKey crypto.Signer
-	URL        string
-}
-
-func (acc *Account) GenerateKey() (err error) {
-	acc.PrivateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	return
-}
-
-func (acc *Account) ImportKey(key string) (err error) {
-	priv, err := x509.ParsePKCS8PrivateKey([]byte(key))
-	if err != nil {
-		return
-	}
-	acc.PrivateKey = priv.(crypto.Signer)
-	return
-}
-
-func (acc *Account) ExportKey() (key string, err error) {
-	data, err := x509.MarshalPKCS8PrivateKey(acc.PrivateKey)
-	if err != nil {
-		return
-	}
-	key = string(data)
-	return
 }
 
 type Config struct {
@@ -78,26 +47,24 @@ type Config struct {
 }
 
 type Client struct {
-	Config    *Config
-	Account   *Account
-	Directory *Directory
-	nonce     string
+	Config     *Config
+	Directory  *Directory
+	PrivateKey crypto.Signer
+	AccountURL string
+	nonce      string
 }
 
 func NewClient(config *Config) (client *Client, err error) {
-	account := &Account{
-		URL: config.AccountURL,
-	}
-	if config.AccountKey != "" {
-		err = account.ImportKey(config.AccountKey)
-	} else {
-		err = account.GenerateKey()
-	}
+	client = &Client{Config: config, AccountURL: config.AccountURL}
+	client.Directory, err = client.GetDirectory()
 	if err != nil {
 		return
 	}
-	client = &Client{Config: config, Account: account}
-	client.Directory, err = client.GetDirectory()
+	if config.AccountKey == "" {
+		err = client.GenerateKey()
+	} else {
+		err = client.ImportKey(config.AccountKey)
+	}
 	return
 }
 
@@ -118,6 +85,31 @@ func (c *Client) request(method, url string, payload []byte) (res *http.Response
 	return
 }
 
+func (acc *Client) GenerateKey() (err error) {
+	acc.PrivateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	return
+}
+
+func (acc *Client) ImportKey(data string) (err error) {
+	b, _ := pem.Decode([]byte(data))
+	key, err := x509.ParseECPrivateKey(b.Bytes)
+	acc.PrivateKey = key
+	return
+}
+
+func (acc *Client) ExportKey() (key string, err error) {
+	certKeyEnc, err := x509.MarshalECPrivateKey(acc.PrivateKey.(*ecdsa.PrivateKey))
+	data := pem.EncodeToMemory(&pem.Block{
+		Type:  "EC PRIVATE KEY",
+		Bytes: certKeyEnc,
+	})
+	return string(data), err
+}
+
+func (acc *Client) GetThumbprint() (thumbprint string, err error) {
+	return JWKThumbprint(acc.PrivateKey.Public())
+}
+
 func (client *Client) get(url string) (headers http.Header, body []byte, err error) {
 	res, err := client.request(http.MethodGet, url, nil)
 	if err != nil {
@@ -126,6 +118,11 @@ func (client *Client) get(url string) (headers http.Header, body []byte, err err
 	headers = res.Header
 	defer res.Body.Close()
 	body, err = io.ReadAll(res.Body)
+	errResp := &Response{}
+	json.Unmarshal(body, errResp)
+	if errResp.Status != 0 {
+		err = fmt.Errorf("%s: %s", errResp.Type, errResp.Detail)
+	}
 	return
 }
 
@@ -138,6 +135,11 @@ func (client *Client) post(url string, payload interface{}) (headers http.Header
 	defer res.Body.Close()
 	headers = res.Header
 	body, err = io.ReadAll(res.Body)
+	errResp := &Response{}
+	json.Unmarshal(body, errResp)
+	if errResp.Status != 0 {
+		err = fmt.Errorf("%s: %s", errResp.Type, errResp.Detail)
+	}
 	return
 }
 

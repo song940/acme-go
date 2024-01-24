@@ -2,17 +2,27 @@ package acme
 
 import "encoding/json"
 
-func (client *Client) GetAuthorization(authorizationUrl string) (resp *AuthorizationResponse, err error) {
+const AuthorizationStatusPending = "pending"
+const AuthorizationStatusValid = "valid"
+
+type Authorization struct {
+	Status     string      `json:"status"`
+	Expires    string      `json:"expires"`
+	Identifier Identifier  `json:"identifier"`
+	Challenges []Challenge `json:"challenges"`
+}
+
+func (client *Client) GetAuthorization(authorizationUrl string) (resp *Authorization, err error) {
 	_, data, err := client.get(authorizationUrl)
 	if err != nil {
 		return
 	}
-	resp = &AuthorizationResponse{}
+	resp = &Authorization{}
 	err = json.Unmarshal(data, &resp)
 	return
 }
 
-func (client *Client) GetAuthorizations(authorizationUrls []string) (resp []*AuthorizationResponse, err error) {
+func (client *Client) GetAuthorizations(authorizationUrls []string) (resp []*Authorization, err error) {
 	for _, authorizationUrl := range authorizationUrls {
 		auth, err := client.GetAuthorization(authorizationUrl)
 		if err != nil {
@@ -23,29 +33,19 @@ func (client *Client) GetAuthorizations(authorizationUrls []string) (resp []*Aut
 	return
 }
 
-func (client *Client) DeactivateAuthorization(authorizationUrl string) (err error) {
-	deactivateReq := map[string]interface{}{
-		"status": "deactivated",
-	}
-	_, _, err = client.post(authorizationUrl, deactivateReq)
+func (client *Client) CompleteAuthorization(authorizationUrl string) (err error) {
+	_, _, err = client.post(authorizationUrl, nil)
 	if err != nil {
 		return
 	}
 	return
 }
 
-// func (client *Client) GetChallenge(challengeUrl string) (resp *ChallengeResponse, err error) {
-// 	_, data, err := client.get(challengeUrl)
-// 	if err != nil {
-// 		return
-// 	}
-// 	resp = &ChallengeResponse{}
-// 	err = json.Unmarshal(data, &resp)
-// 	return
-// }
-
-func (client *Client) CompleteChallenge(challengeUrl string) (err error) {
-	_, _, err = client.post(challengeUrl, nil)
+func (client *Client) DeactivateAuthorization(authorizationUrl string) (err error) {
+	deactivateReq := map[string]interface{}{
+		"status": "deactivated",
+	}
+	_, _, err = client.post(authorizationUrl, deactivateReq)
 	if err != nil {
 		return
 	}
