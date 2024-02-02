@@ -8,7 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"log"
 
-	"github.com/song940/acme/acme"
+	"github.com/song940/acme-go/acme"
 )
 
 const accountKey = `
