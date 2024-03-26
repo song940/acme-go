@@ -1,0 +1,31 @@
+{{define "page"}}
+<h2>Authorization</h2>
+
+<dt>Status:</dt>
+<dd>{{.authz.Status}}</dd>
+
+<dt>Expires:</dt>
+<dd>{{.authz.Expires}}</dd>
+
+<h3>Challenges</h3>
+
+<table class="table table-striped table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Status</th>
+            <th>#</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range .authz.Challenges }}
+        <tr>
+            <td>{{.Type}}</td>
+            <td>{{.Status}}</td>
+            <td><a href="?action=complete&url={{.URL}}">complete</a></td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+
+{{end}}

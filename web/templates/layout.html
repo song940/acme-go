@@ -1,0 +1,31 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACME</title>
+  <style>
+    @import "https://lsong.org/css/stylesheet.css";
+    @import "https://lsong.org/stylesheets/form.css";
+    @import "https://lsong.org/stylesheets/input.css";
+    @import "https://lsong.org/stylesheets/table.css";
+    @import "https://lsong.org/stylesheets/button.css";
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1><a href="/">ACME</a></h1>
+    <nav>
+    </nav>
+    <main>
+      {{template "page" .}}
+    </main>
+  </div>
+</body>
+
+</html>
+
+{{end}}

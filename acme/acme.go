@@ -54,17 +54,17 @@ type Client struct {
 	nonce      string
 }
 
-func NewClient(config *Config) (client *Client, err error) {
+func NewDefaultConfig() *Config {
+	return &Config{
+		DirectoryURL: "https://acme-v02.api.letsencrypt.org/directory",
+	}
+}
+
+func NewClient(config *Config) (client *Client) {
+	if config == nil {
+		config = NewDefaultConfig()
+	}
 	client = &Client{Config: config, AccountURL: config.AccountURL}
-	client.Directory, err = client.GetDirectory()
-	if err != nil {
-		return
-	}
-	if config.AccountKey == "" {
-		err = client.GenerateKey()
-	} else {
-		err = client.ImportKey(config.AccountKey)
-	}
 	return
 }
 

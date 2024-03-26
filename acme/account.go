@@ -33,6 +33,16 @@ func (client *Client) Register(request *AccountRequest) (url string, resp *Accou
 	return
 }
 
+func (client *Client) GetAccount(accountUrl string) (resp *AccountResponse, err error) {
+	_, data, err := client.post(accountUrl, nil)
+	if err != nil {
+		return
+	}
+	resp = &AccountResponse{}
+	err = json.Unmarshal(data, &resp)
+	return
+}
+
 func (client *Client) DeactivateAccount(accountUrl string) (err error) {
 	deactivateReq := map[string]interface{}{
 		"status": "deactivated",

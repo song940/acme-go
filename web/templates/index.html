@@ -1,0 +1,73 @@
+{{define "page"}}
+<h2>Step 1</h2>
+
+<form method="POST" action="?action=key">
+  <h3>Private Key</h3>
+  <textarea name="key" id="" rows="10" class="input">
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIGVk46ELEo4K2AdxjrpFdAiPeFOBVSaZtLqYwcIh2HkXoAoGCCqGSM49
+AwEHoUQDQgAEp3WfLMfp9Mvhrm8xWex850OrrpVeUgFajsNEn5DwQS3ivH4bEmoJ
+VGyorRanOz/Ep3acmt3G3jZfso+gAzZQsw==
+-----END EC PRIVATE KEY-----
+  </textarea>
+  <div class="form-field">
+    <button>Import Key</button>
+  </div>
+</form>
+
+<form method="POST" action="?action=directory">
+  <h3>Directory</h3>
+  <div class="form-field">
+    <label for="directory">Directory:</label>
+    <input type="text" name="directory_url" class="input" value="https://acme-staging-v02.api.letsencrypt.org/directory" />
+  </div>
+  <div class="form-field">
+    <button type="submit">Fetch</button>
+  </div>
+</form>
+
+<h2>Step 2: Account</h2>
+
+<form action="?action=login" method="POST">
+    <h3>Get Account</h3>
+    <div class="form-field">
+        <label for="account">Account:</label>
+        <input type="text" name="account_url" class="input"
+            value="https://acme-staging-v02.api.letsencrypt.org/acme/acct/133591064">
+    </div>
+    <div class="form-field">
+        <button type="submit">Fetch</button>
+        <button>Deactivate</button>
+    </div>
+</form>
+
+<form method="POST" action="?action=register">
+    <h3>Register Account</h3>
+    <div class="form-field">
+        <label for="contact">Email:</label>
+        <input type="email" name="email" class="input" />
+    </div>
+    <div class="form-field">
+        <label for="termsOfService">
+            <input type="checkbox" name="termsOfService" />
+            I agree to the <a href="https://acme.com/terms-of-service">terms of service</a></a>
+        </label>
+    </div>
+    <div class="form-field">
+        <button type="submit">Register</button>
+    </div>
+</form>
+
+<h2>Step 3: Order</h2>
+<form action="?action=order" method="POST">
+  <h3>Create Order</h3>
+  <select name="type" id="type">
+    <option value="dns">DNS</option>
+  </select>
+  <input type="text" name="domain" placeholder="example.com">
+  <div class="form-field">
+    <button type="submit">Create</button>
+  </div>
+</form>
+
+{{end}}
